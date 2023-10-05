@@ -1,0 +1,1 @@
+import{j as a}from"./index-f613b954.js";/* empty css               */const o=({user:i})=>{const s=i==null?void 0:i.profilePic;return a.jsx("div",{className:"loader-container",children:a.jsxs("div",{className:"loader-animation",children:[a.jsx("div",{className:"heart"}),s&&a.jsx("img",{loading:"true",src:s,alt:"User",className:"user-image"})]})})};export{o as L};

@@ -1,0 +1,21 @@
+
+
+.app{
+  background-color: black;
+  height: 100vh;
+}
+
+.EmojiPickerReact {
+  position: absolute!important;
+  bottom: 4rem;
+  background-color: #080420;
+  box-shadow: 0 5px 10px #040404;
+  border-color: #583fc6;
+  .emoji-scroll-wrapper::-webkit-scrollbar {
+    background-color: #08042079;
+    width: 5px;
+    &-thumb {
+      background-color: #0c0724;
+    }
+  }
+}
