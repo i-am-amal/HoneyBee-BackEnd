@@ -6,6 +6,8 @@ export const uploadProfilePic = async (filePath, cloudinary,removeFile) => {
       { fetch_format: "auto" },
     ],
   };
+
+  
   try {
     const result = await cloudinary.uploader.upload(filePath, options);
     removeFile(filePath)

@@ -197,6 +197,7 @@ export const UpdateUser = async (
 };
 
 export const showUsers = async (req, userModel) => {
+  console.log('discover function callled');
   try {
     const user = await userModel.findById(req.user.id);
     let users;

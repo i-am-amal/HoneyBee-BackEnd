@@ -157,6 +157,7 @@ export const userData = (findUserWithId, userModel) => async (req, res) => {
 };
 
 export const discoverUsers = (userModel, showUsers) => async (req, res) => {
+  console.log('discoverUsers')
   try {
     const users = await showUsers(req, userModel);
     res.json(users);
