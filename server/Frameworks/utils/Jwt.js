@@ -18,7 +18,7 @@ try {
 };
 
 export const verifyUserToken = (token,req) => {
-  console.log('token checked')
+  console.log('token checked in jwt file')
   const verified = jwt.verify(token, process.env.SECRET_KEY_USER);
   if (verified) {
    req.user = verified;;

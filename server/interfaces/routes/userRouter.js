@@ -54,6 +54,7 @@ import {
 import userModel from "../../domain/model/userModel.js";
 import matchModel from "../../domain/model/matchesModel.js";
 import { checkOtp, sendOtp } from "../../Frameworks/utils/Twilio.js";
+import { sendSms,loadOtp } from "../../Frameworks/utils/Fast_2_Sms.js";
 import { upload } from "../../Frameworks/utils/Multer.js";
 import { getMatchedUsers } from "../../usecases/MatchesInteractor.js";
 import removeFile from "../../Frameworks/utils/FileRemover.js";
@@ -63,7 +64,7 @@ import {
   image,
 } from "../../usecases/CloudinaryInteractor.js";
 //route Handlers
-router.post("/phone", phoneOtp(SendPhoneOtp, sendOtp));
+router.post("/phone", phoneOtp(loadOtp, sendSms));
 
 router.get(
   "/oAuth/google",

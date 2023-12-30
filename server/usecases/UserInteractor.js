@@ -1,15 +1,16 @@
 import path from "path";
-export const createNewUser = async (userData, userModel,  cloudinary,
+import Users from "../domain/model/userModel.js";
+export const createNewUser = async (userData, userModel, cloudinary,
   uploadProfilePic,
   uploadCoverPic,
   image,
-  removeFile,req) => {
+  removeFile, req) => {
   try {
     console.log(req.hostname);
     const user = new userModel(userData);
-    
+
     if (req?.files?.profilePic) {
-      
+
       const result = await uploadProfilePic(
         req.files.profilePic[0].path,
         cloudinary,
@@ -27,17 +28,17 @@ export const createNewUser = async (userData, userModel,  cloudinary,
       user.coverPic = result;
     }
 
-   if (req?.files?.image0) {
-    console.log('hi');
+    if (req?.files?.image0) {
+      console.log('hi');
       const result = await image(
         req.files.image0[0].path,
         cloudinary,
         removeFile
       );
-      user.images.push(result) 
+      user.images.push(result)
     }
 
-   
+
 
     if (req?.files?.image1) {
       console.log('hlo');
@@ -46,7 +47,7 @@ export const createNewUser = async (userData, userModel,  cloudinary,
         cloudinary,
         removeFile
       );
-      user.images.push(result) 
+      user.images.push(result)
     }
 
     if (req?.files?.image2) {
@@ -56,7 +57,7 @@ export const createNewUser = async (userData, userModel,  cloudinary,
         cloudinary,
         removeFile
       );
-      user.images.push(result) 
+      user.images.push(result)
     }
     await user.save();
     console.log(user);
@@ -68,9 +69,10 @@ export const createNewUser = async (userData, userModel,  cloudinary,
   }
 };
 
-export const findUserWithPhone = async (phone, userModel) => {
+export const findUserWithPhone = async (phone) => {
+  console.log("findUserWithPhone : ", phone);
   try {
-    const user = await userModel.findOne({ phone });
+    const user = await Users.findOne({'phone':phone.phone});
     return user;
   } catch (error) {
     console.error(error);
@@ -138,7 +140,7 @@ export const UpdateUser = async (
       (user.realationshipStatus = realationshipStatus);
 
     if (req?.files?.profilePic) {
-      
+
       const result = await uploadProfilePic(
         req.files.profilePic[0].path,
         cloudinary,
@@ -156,8 +158,8 @@ export const UpdateUser = async (
       user.coverPic = result;
     }
 
-   if (req?.files?.image0) {
-    console.log('hi');
+    if (req?.files?.image0) {
+      console.log('hi');
       const result = await image(
         req.files.image0[0].path,
         cloudinary,
@@ -166,7 +168,7 @@ export const UpdateUser = async (
       user.images[0] = result;
     }
 
-   
+
 
     if (req?.files?.image1) {
       console.log('hlo');
@@ -207,20 +209,20 @@ export const showUsers = async (req, userModel) => {
       users = await userModel.find({ _id: { $ne: user._id }, gender: user.Preference });
     }
 
-      // Function to shuffle the array using Fisher-Yates algorithm
-      const shuffleArray = (array) => {
-        const shuffledArray = array.slice();
-        for (let i = shuffledArray.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [shuffledArray[i], shuffledArray[j]] = [
-            shuffledArray[j],
-            shuffledArray[i],
-          ];
-        }
-        return shuffledArray;
-      };
-  
-     const Users= shuffleArray(users)
+    // Function to shuffle the array using Fisher-Yates algorithm
+    const shuffleArray = (array) => {
+      const shuffledArray = array.slice();
+      for (let i = shuffledArray.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffledArray[i], shuffledArray[j]] = [
+          shuffledArray[j],
+          shuffledArray[i],
+        ];
+      }
+      return shuffledArray;
+    };
+
+    const Users = shuffleArray(users)
     return Users;
   } catch (error) {
     throw new Error("Failed to lookup users");
@@ -373,21 +375,22 @@ export const verifySubscription = async (userModel, pack, user) => {
     });
     console.log(isuserPresent);
     if (!isuserPresent.length > 0) {
-          await userModel.findByIdAndUpdate(user, {
+      await userModel.findByIdAndUpdate(user, {
         $push: {
           HoneyVipType: pack,
         },
       });
-         const userData = await userModel.findById(user);
-    return userData
+      const userData = await userModel.findById(user);
+      return userData
     }
- 
+
   } catch (error) {
     console.log(error, "");
   }
 };
 
 export const searchOrFilterUsers = async (data, userModel) => {
+  console.log('searchOrFilterUsers called');
   console.log(data);
   const {
     fullName,
@@ -448,11 +451,12 @@ export const searchOrFilterUsers = async (data, userModel) => {
 
 export const deleteImage = async (path, id, userModel) => {
   try {
-    
-   return  await userModel.findByIdAndUpdate(id, 
-      { $pull:
-           { images:path}
-              })
+
+    return await userModel.findByIdAndUpdate(id,
+      {
+        $pull:
+          { images: path }
+      })
 
   } catch (err) {
     console.log(err);

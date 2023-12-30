@@ -4,6 +4,7 @@ const accountSid = process.env.ACCOUNT;
 const authToken = process.env.TOKEN;
 const verifySid = process.env.VERIFY;
 import twilio from "twilio";
+import fast2sms from 'fast-two-sms';
 
 const client = twilio(accountSid, authToken);
 

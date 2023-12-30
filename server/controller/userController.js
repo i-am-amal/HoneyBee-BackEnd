@@ -1,30 +1,35 @@
+let smsOTP
+import Users from "../domain/model/userModel.js";
+import { createUserToken } from "../Frameworks/utils/Jwt.js";
 export const userDetails =
-  (createNewUser, createJwtToken, userModel, createUserToken,  cloudinary,
+  (createNewUser, createJwtToken, userModel, createUserToken, cloudinary,
     uploadProfilePic,
     uploadCoverPic,
     image,
-    removeFile,req) =>
-  async (req, res) => {
-    try {
-      const user = await createNewUser(req.body, userModel,  cloudinary,
-        uploadProfilePic,
-        uploadCoverPic,
-        image,
-        removeFile,req);
-      const token = await createJwtToken(user, createUserToken);
-      res
-        .status(200)
-        .json({ success: true, redirect: "/discover", user, token });
-    } catch (error) {
-      console.log(error);
-      res.status(400).json({ error: "Failed to create user" });
-    }
-  };
+    removeFile, req) =>
+    async (req, res) => {
+      try {
+        const user = await createNewUser(req.body, userModel, cloudinary,
+          uploadProfilePic,
+          uploadCoverPic,
+          image,
+          removeFile, req);
+        const token = await createJwtToken(user, createUserToken);
+        res
+          .status(200)
+          .json({ success: true, redirect: "/discover", user, token });
+      } catch (error) {
+        console.log(error);
+        res.status(400).json({ error: "Failed to create user" });
+      }
+    };
 
-export const phoneOtp = (SendPhoneOtp, sendOtp) => async (req, res) => {
+export const phoneOtp = (loadOtp, sendSms) => async (req, res) => {
   const { phone } = req.body;
   try {
-    await SendPhoneOtp(phone, sendOtp);
+    // await SendPhoneOtp(phone, sendOtp);
+    smsOTP = await loadOtp(phone)
+    console.log('otp send : ', smsOTP)
     res.json({ success: true }).status(200);
   } catch (error) {
     console.error(error);
@@ -34,90 +39,91 @@ export const phoneOtp = (SendPhoneOtp, sendOtp) => async (req, res) => {
 
 export const verifyOtp =
   (
-    VerifyPhoneOtp,
+    // VerifyPhoneOtp,
     checkOtp,
     userModel,
     findUserWithPhone,
     createJwtToken,
-    createUserToken
+    // createUserToken
   ) =>
-  async (req, res) => {
-    const { otp, phone } = req.body;
-    try {
-      const verificationStatus = await VerifyPhoneOtp(otp, phone, checkOtp);
-      if (verificationStatus.status === "approved") {
-        const user = await findUserWithPhone(phone, userModel);
-        if (!user) {
-          res.json({
-            success: true,
-            newUser: true,
-            redirect: "/createAccount",
-          });
+    async (req, res) => {
+      const { otp, phone } = req.body;
+      try {
+        if (smsOTP == otp) {
+          // const user = await findUserWithPhone( {phone})
+          const user = await Users.findOne({phone})
+          console.log('user : ', user);
+          if (!user) {
+            res.json({
+              success: true,
+              newUser: true,
+              redirect: "/createAccount",
+            });
+          } else {
+            const token = await createUserToken(user);
+            res.json({ success: true, token, redirect: "/Discover" });
+          }
         } else {
-          const token = await createJwtToken(user, createUserToken);
-          res.json({ success: true, token, redirect: "/Discover" });
+          throw new Error("Failed to verify OTP");
         }
-      } else {
-        throw new Error("Failed to verify OTP");
+      } catch (error) {
+        console.error(error);
+        res.status(401).json({ success: false, message: "Some error occurred" });
       }
-    } catch (error) {
-      console.error(error);
-      res.status(401).json({ success: false, message: "Some error occurred" });
-    }
-  };
+    };
 
 export const googleData =
   (userModel, findUserWithEmail, getGoogleOauthToken, getGoogleUser) =>
-  async (req, res) => {
-    try {
-      const { code } = req.query;
-      if (!code) {
-        throw new Error("Authorization code not provided");
-      }
-      const { id_token, access_token } = await getGoogleOauthToken(code);
-      const { name, verified_email, email } = await getGoogleUser(
-        id_token,
-        access_token
-      );
-      if (!verified_email) {
-        throw new Error("Google account not verified");
-      }
-      const user = await findUserWithEmail(email, userModel);
-      if (user) {
-        res.redirect(
-          `https://honeybee.zodiacwatches.shop/googleLogin?email=${email}`
+    async (req, res) => {
+      try {
+        const { code } = req.query;
+        if (!code) {
+          throw new Error("Authorization code not provided");
+        }
+        const { id_token, access_token } = await getGoogleOauthToken(code);
+        const { name, verified_email, email } = await getGoogleUser(
+          id_token,
+          access_token
         );
-      } else {
-        res.redirect(
-          `https://honeybee.zodiacwatches.shop/login?fullName=${name}&email=${email}`
-        );
+        if (!verified_email) {
+          throw new Error("Google account not verified");
+        }
+        const user = await findUserWithEmail(email, userModel);
+        if (user) {
+          res.redirect(
+            `https://honeybee.zodiacwatches.shop/googleLogin?email=${email}`
+          );
+        } else {
+          res.redirect(
+            `https://honeybee.zodiacwatches.shop/login?fullName=${name}&email=${email}`
+          );
+        }
+      } catch (error) {
+        console.error("Failed to authorize Google User", error);
+        res.redirect(`https://honeybee.zodiacwatches.shop`);
       }
-    } catch (error) {
-      console.error("Failed to authorize Google User", error);
-      res.redirect(`https://honeybee.zodiacwatches.shop`);
-    }
-  };
+    };
 
 export const googleLogin =
   (findUserWithEmail, userModel, createUserToken, createJwtToken) =>
-  async (req, res) => {
-    try {
-      const { email } = req.body;
-      const user = await findUserWithEmail(email, userModel);
-      if (!user) {
-        throw new Error("User not found");
+    async (req, res) => {
+      try {
+        const { email } = req.body;
+        const user = await findUserWithEmail(email, userModel);
+        if (!user) {
+          throw new Error("User not found");
+        }
+        const token = await createJwtToken(user, createUserToken);
+        res
+          .status(200)
+          .json({ success: true, token, redirect: "/Discover", user: user });
+      } catch (error) {
+        console.error(error);
+        res
+          .status(400)
+          .json({ success: false, message: "Failed to login with Google" });
       }
-      const token = await createJwtToken(user, createUserToken);
-      res
-        .status(200)
-        .json({ success: true, token, redirect: "/Discover", user: user });
-    } catch (error) {
-      console.error(error);
-      res
-        .status(400)
-        .json({ success: false, message: "Failed to login with Google" });
-    }
-  };
+    };
 
 export const editUser =
   (
@@ -129,23 +135,23 @@ export const editUser =
     image,
     removeFile
   ) =>
-  async (req, res) => {
-    try {
-      const user = await updateUser(
-        userModel,
-        req,
-        cloudinary,
-        uploadProfilePic,
-        uploadCoverPic,
-        image,
-        removeFile
-      );
-      console.log(user);
-      res.json(user);
-    } catch (error) {
-      res.status(400).json(error);
-    }
-  };
+    async (req, res) => {
+      try {
+        const user = await updateUser(
+          userModel,
+          req,
+          cloudinary,
+          uploadProfilePic,
+          uploadCoverPic,
+          image,
+          removeFile
+        );
+        console.log(user);
+        res.json(user);
+      } catch (error) {
+        res.status(400).json(error);
+      }
+    };
 
 export const userData = (findUserWithId, userModel) => async (req, res) => {
   try {
@@ -251,8 +257,8 @@ export const searchFilterUsers =
 export const deleteUserImage = (userModel, deleteImage) => async (req, res) => {
   console.log('hi');
   try {
-  await deleteImage(req.body.path, req.user.id, userModel)
-    res.json({message:true})
+    await deleteImage(req.body.path, req.user.id, userModel)
+    res.json({ message: true })
   } catch (error) {
     res.status(500).json(error);
   }
