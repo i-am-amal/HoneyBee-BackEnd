@@ -5,6 +5,7 @@ import "@fontsource/Roboto";
 
 const Phone = ({ changePhone,error,setError }) => {
   const [value, setValue] = React.useState("");
+  console.log(value);
   
   useEffect(() => {
     if(value){

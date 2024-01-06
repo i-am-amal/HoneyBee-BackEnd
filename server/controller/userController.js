@@ -244,7 +244,10 @@ export const verifyPayment =
 
 export const searchFilterUsers =
   (searchOrFilterUsers, userModel) => async (req, res) => {
+    console.log('search filter entered');
     try {
+      console.log('search filter entered in try');
+
       let users = await searchOrFilterUsers(req.body, userModel);
       let result = users.filter((user) => user._id.toString() !== req.user.id);
       res.status(200).json(result);
