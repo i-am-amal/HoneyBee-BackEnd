@@ -28,7 +28,9 @@ export const phoneOtp = (loadOtp, sendSms) => async (req, res) => {
   const { phone } = req.body;
   try {
     // await SendPhoneOtp(phone, sendOtp);
-    smsOTP = await loadOtp(phone)
+    const updatedValue=phone.replace(/^\+91|\s/g,'')
+    console.log(updatedValue);
+    smsOTP = await loadOtp(updatedValue)
     console.log('otp send : ', smsOTP)
     res.json({ success: true }).status(200);
   } catch (error) {
@@ -51,7 +53,8 @@ export const verifyOtp =
       try {
         if (smsOTP == otp) {
           // const user = await findUserWithPhone( {phone})
-          const user = await Users.findOne({phone})
+          const updatedValue=phone.replace(/^\+91|\s/g,'')
+          const user = await Users.findOne({phone:updatedValue})
           console.log('user : ', user);
           if (!user) {
             res.json({

@@ -6,8 +6,10 @@ import { isUserMatched } from "../usecases/MatchesInteractor.js";
 const io = new Server({
   cors: {
     origin: "http://localhost:5173",
+    // origin: '',
+
   },
-  pingTimeout: 60000,
+  pingTimeout: 6000000,
 });
 
 global.onlineUsers = new Map();
@@ -17,16 +19,27 @@ io.on("connection", (Socket) => {
 
   Socket.on("add-user", (userId) => {
     onlineUsers.set(userId, Socket.id);
+    console.log("____________________________________________________________________");
+    console.log("Socket event : add-user, request : %s",userId);
+    console.log("Socket Id : %s",Socket.id);
+    console.log("____________________________________________________________________");
   });
 
   Socket.on("disconnect", () => {
     const userId = [...onlineUsers.entries()].find(([key, value]) => value === Socket.id)?.[0];
     if (userId) {
      onlineUsers.delete(userId);
+     console.log("____________________________________________________________________");
+     console.log("Socket disconnect, request : %s",userId);
+     console.log("____________________________________________________________________");
+    
     }
   });
 
   Socket.on("getOnlineUsers", async (user) => {
+    console.log("____________________________________________________________________");
+    console.log("Socket event : getOnlineUsers, request : %s",user);
+    console.log("____________________________________________________________________");
     let users = [];
     for (const [key, value] of onlineUsers.entries()) {
       if (key != user) {
@@ -35,62 +48,107 @@ io.on("connection", (Socket) => {
       }
     }
       Socket.emit("onlineUsersList", users);
-    
+      console.log("____________________________________________________________________");
+      console.log("Socket event : onlineUsersList, response : %s",users);
+      console.log("____________________________________________________________________");
+  
   });
 
   Socket.on("videoCall", (data) => {
-    console.log("video call", data);
+    console.log("____________________________________________________________________");
+    console.log("Socket event : video call, request : %s",data);
+    console.log("____________________________________________________________________");
+    // console.log("video call", data);
     const sendUserSocket = onlineUsers.get(data.to);
     if (sendUserSocket) {
       data.video = true;
       data.modal = true;
       Socket.to(sendUserSocket).emit("incoming-video-call", data);
+      console.log("____________________________________________________________________");
+      console.log("Socket event : incoming-video-call, response : %s",data);
+      console.log("____________________________________________________________________");
+   
     }
   });
 
   Socket.on("send-msg", async (data) => {
+    console.log("____________________________________________________________________");
+    console.log("Socket event : send-msg, request : %s",data);
+    console.log("____________________________________________________________________");
+  
     const sendUserSocket = onlineUsers.get(data.to);
     const result = await addNewMsg(data, chatModel);
 
     if (sendUserSocket) {
       Socket.to(sendUserSocket).emit("msg-recieve", result);
+      console.log("____________________________________________________________________");
+      console.log("Socket event : msg-recieve, response : %s",result);
+      console.log("____________________________________________________________________");
+     
       const body = {
         conversationIds: result.conversationId,
       };
       const newData = await getLatestMessage(body, chatModel);
       Socket.to(sendUserSocket).emit("new-msg", newData);
+      console.log("____________________________________________________________________");
+      console.log("Socket event : new-msg, response : %s",newData);
+      console.log("____________________________________________________________________");
     }
   });
 
   Socket.on("typing", (data) => {
+    console.log("____________________________________________________________________");
+    console.log("Socket event : typing, request : %s",data);
+    console.log("____________________________________________________________________");
     const sendUserSocket = onlineUsers.get(data.to);
     if (sendUserSocket) {
       Socket.to(sendUserSocket).emit("show-typing", data.from);
+      console.log("____________________________________________________________________");
+      console.log("Socket event : show-typing, response : %s",data.from);
+      console.log("____________________________________________________________________");
     }
   });
 
   Socket.on("stop-typing", (data) => {
+    console.log("____________________________________________________________________");
+    console.log("Socket event : stop-typing, request : %s",data);
+    console.log("____________________________________________________________________");
     const sendUserSocket = onlineUsers.get(data.to);
     if (sendUserSocket) {
       Socket.to(sendUserSocket).emit("hide-typing", data.from);
+      console.log("____________________________________________________________________");
+      console.log("Socket event : hide-typing, response : %s",data.from);
+      console.log("____________________________________________________________________");
     }
   });
 
 
 
   Socket.on("audioCall", (data) => {
+    console.log("____________________________________________________________________");
+    console.log("Socket event : audioCall, request : %s",data);
+    console.log("____________________________________________________________________");
     const sendUserSocket = onlineUsers.get(data.to);
     if (sendUserSocket) {
       data.audio = true;
       Socket.to(sendUserSocket).emit("incoming-audio-call", data);
+      console.log("____________________________________________________________________");
+      console.log("Socket event : incoming-audio-call, response : %s",data);
+      console.log("____________________________________________________________________");
     }
   });
 
   Socket.on("callRejected", (data) => {
+    console.log("____________________________________________________________________");
+    console.log("Socket event : callRejected, request : %s",data);
+    console.log("____________________________________________________________________");
     const sendUserSocket = onlineUsers.get(data.from);
     if (sendUserSocket) {
       console.log("rejected", data);
       Socket.to(sendUserSocket).emit("videoCallRejected");
+      console.log("____________________________________________________________________");
+      console.log("Socket event : videoCallRejected, response : %s",data);
+      console.log("____________________________________________________________________");
     }
   });
 });

@@ -86,6 +86,8 @@ function ChatCard({ currentChat, setCurrentChat, socket,onlineUsers }) {
       });
   }, [currentChat]);
 
+
+  // to send the message  -------------->>>>>>>>>>>>>
   const handleSendMsg = async (msg) => {
     const data = {
       from: user._id,

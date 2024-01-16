@@ -10,6 +10,7 @@ import io from './Sockets/Socket.js'
 config();
 const app = express();
 const PORT = process.env.PORT;
+// const ipAddress = '192.168.1.40'
 
 app.use(cors());
 app.use(express.json());
