@@ -5,8 +5,8 @@ import { addNewMsg, getLatestMessage } from "../usecases/ChatInteractor.js";
 import { isUserMatched } from "../usecases/MatchesInteractor.js";
 const io = new Server({
   cors: {
-    origin: "http://localhost:5173",
-    // origin: '',
+    // origin: "http://localhost:5173",
+    origin: '',
 
   },
   pingTimeout: 6000000,
@@ -36,6 +36,18 @@ io.on("connection", (Socket) => {
     }
   });
 
+  Socket.on("testEventRequest", (data) => {
+    console.log("____________________________________________________________________");
+    console.log("Socket event : testEventRequest , request : %s",data);
+    console.log("____________________________________________________________________");
+   
+      io.emit("testEventResponse",JSON.stringify(data));
+      console.log("____________________________________________________________________");
+      console.log("Socket event : testEventResponse, response : %s",data);
+      console.log("____________________________________________________________________");
+    
+  });
+
   Socket.on("getOnlineUsers", async (user) => {
     console.log("____________________________________________________________________");
     console.log("Socket event : getOnlineUsers, request : %s",user);
@@ -47,7 +59,7 @@ io.on("connection", (Socket) => {
         if (matchedUser) users.push(key);
       }
     }
-      Socket.emit("onlineUsersList", users);
+      Socket.emit("onlineUsersList", JSON.stringify(users));
       console.log("____________________________________________________________________");
       console.log("Socket event : onlineUsersList, response : %s",users);
       console.log("____________________________________________________________________");
@@ -63,7 +75,7 @@ io.on("connection", (Socket) => {
     if (sendUserSocket) {
       data.video = true;
       data.modal = true;
-      Socket.to(sendUserSocket).emit("incoming-video-call", data);
+      Socket.to(sendUserSocket).emit("incoming-video-call", JSON.stringify(data));
       console.log("____________________________________________________________________");
       console.log("Socket event : incoming-video-call, response : %s",data);
       console.log("____________________________________________________________________");
@@ -71,30 +83,50 @@ io.on("connection", (Socket) => {
     }
   });
 
+  
+
   Socket.on("send-msg", async (data) => {
     console.log("____________________________________________________________________");
     console.log("Socket event : send-msg, request : %s",data);
     console.log("____________________________________________________________________");
-  
+
+    
+
     const sendUserSocket = onlineUsers.get(data.to);
     const result = await addNewMsg(data, chatModel);
 
+    console.log("____________________________________________________________________");
+    console.log("onlineUsers : %s",onlineUsers);
+    console.log("sendUserSocket : %s",sendUserSocket);
+    console.log("result : %s",result);
+    console.log("____________________________________________________________________");
+
+
+    // io.emit("msg-recieve",JSON.stringify(result));
+    // console.log("____________________________________________________________________");
+    // console.log("Socket event : msg-recieve, response : %s",JSON.stringify(result));
+    // console.log("____________________________________________________________________");
+
+
     if (sendUserSocket) {
-      Socket.to(sendUserSocket).emit("msg-recieve", result);
+     
+      Socket.to(sendUserSocket).emit("msg-recieve", JSON.stringify(result) );
       console.log("____________________________________________________________________");
-      console.log("Socket event : msg-recieve, response : %s",result);
+      console.log("Socket event : msg-recieve, response : %s",JSON.stringify(result));
       console.log("____________________________________________________________________");
      
       const body = {
         conversationIds: result.conversationId,
       };
       const newData = await getLatestMessage(body, chatModel);
-      Socket.to(sendUserSocket).emit("new-msg", newData);
+      Socket.to(sendUserSocket).emit("new-msg", JSON.stringify(newData) );
       console.log("____________________________________________________________________");
       console.log("Socket event : new-msg, response : %s",newData);
       console.log("____________________________________________________________________");
     }
   });
+
+
 
   Socket.on("typing", (data) => {
     console.log("____________________________________________________________________");
@@ -102,7 +134,7 @@ io.on("connection", (Socket) => {
     console.log("____________________________________________________________________");
     const sendUserSocket = onlineUsers.get(data.to);
     if (sendUserSocket) {
-      Socket.to(sendUserSocket).emit("show-typing", data.from);
+      Socket.to(sendUserSocket).emit("show-typing", JSON.stringify(data.from));
       console.log("____________________________________________________________________");
       console.log("Socket event : show-typing, response : %s",data.from);
       console.log("____________________________________________________________________");
@@ -115,7 +147,7 @@ io.on("connection", (Socket) => {
     console.log("____________________________________________________________________");
     const sendUserSocket = onlineUsers.get(data.to);
     if (sendUserSocket) {
-      Socket.to(sendUserSocket).emit("hide-typing", data.from);
+      Socket.to(sendUserSocket).emit("hide-typing", JSON.stringify(data.from));
       console.log("____________________________________________________________________");
       console.log("Socket event : hide-typing, response : %s",data.from);
       console.log("____________________________________________________________________");
@@ -131,7 +163,7 @@ io.on("connection", (Socket) => {
     const sendUserSocket = onlineUsers.get(data.to);
     if (sendUserSocket) {
       data.audio = true;
-      Socket.to(sendUserSocket).emit("incoming-audio-call", data);
+      Socket.to(sendUserSocket).emit("incoming-audio-call",JSON.stringify(data));
       console.log("____________________________________________________________________");
       console.log("Socket event : incoming-audio-call, response : %s",data);
       console.log("____________________________________________________________________");
