@@ -8,18 +8,36 @@ export const getAllChats = async ({ from, to }, chatModel) => {
       })
       .sort({ updatedAt: 1 });
 
-    const projectedMessages = messages.map((msg) => {
-      return {
-        fromSelf: msg.sender.toString() === from,
-        message: msg.message,
-        messageType: msg.messageType,
-      };
-    });
+
+      const projectedMessages = messages.map((msg) => {
+        return {
+          fromSelf: msg.sender.toString() === from,
+          message: msg.message,
+          messageType: msg.messageType,
+          createdAt: msg.createdAt,  // Include createdAt field
+          updatedAt: msg.updatedAt   // Include updatedAt field
+        };
+      });
+
+
+    // const projectedMessages = messages.map((msg) => {
+    //   return {
+    //     fromSelf: msg.sender.toString() === from,
+    //     message: msg.message,
+    //     messageType: msg.messageType,
+    //   };
+    // });
+
     return projectedMessages;
+
+
   } catch (error) {
     throw new Error("failed to get chats");
   }
 };
+
+
+
 
 export const addNewMsg = async (
   { from, to, message, messageType, conversationId },
