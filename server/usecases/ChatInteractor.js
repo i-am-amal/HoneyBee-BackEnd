@@ -1,3 +1,4 @@
+
 export const getAllChats = async ({ from, to }, chatModel) => {
   try {
     const messages = await chatModel
@@ -59,7 +60,13 @@ export const addNewMsg = async (
 
 export const getLatestMessage = async ({ conversationIds }, chatModel) => {
   try {
-    let latestChats = await chatModel.find({ conversationId: { $in: conversationIds } });
+
+
+    // let latestChats = await chatModel.find({ conversationId: { $in: conversationIds } });
+    let latestChats = await chatModel.find({ conversationId: { $in: conversationIds } }).populate({
+      path: 'users',
+      select: 'fullName profilePic'
+    });
 
     // Sort the documents in descending order by updatedAt field
     latestChats.sort((a, b) => b.updatedAt - a.updatedAt);
@@ -73,6 +80,21 @@ export const getLatestMessage = async ({ conversationIds }, chatModel) => {
     }, {});
 
     const result = Object.values(groupedChats);
+
+
+
+
+    ///////////////////////////////
+    // Populate user details for the second user in the users array
+    // for (let chat of result) {
+    //   const userId = chat.users[1]; // Assuming the second user is at index 1
+    //   const user = await userModel.findById(userId);
+    //   if (user) {
+    //     chat.secondUserDetails = user; // Add user details to the chat object
+    //   }
+    // }
+///////////////////////////////////
+
 
     return result
   } catch (err) {
@@ -94,3 +116,4 @@ export const markChatAsRead = async (userId,{ msgId },chatModel) => {
     throw new Error("Failed to mark user");
   }
 };
+

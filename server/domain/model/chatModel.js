@@ -6,7 +6,11 @@ const chatSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
-    users: Array,
+    // users: Array,
+    users: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Users' // Ensure it matches the model name
+    }],
     messageType: {
       type: String,
       enum: ["text", "video", "audio", "image"],
