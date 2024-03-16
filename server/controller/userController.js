@@ -24,14 +24,24 @@ export const userDetails =
       }
     };
 
+
 export const phoneOtp = (loadOtp, sendSms) => async (req, res) => {
   const { phone } = req.body;
+  const defaultPhoneNumber = "1234567890";
+  const defaultOtp = "111111";
+
   try {
-    // await SendPhoneOtp(phone, sendOtp);
-    const updatedValue=phone.replace(/^\+91|\s/g,'')
-    console.log(updatedValue);
-    smsOTP = await loadOtp(updatedValue)
-    console.log('otp send : ', smsOTP)
+
+    if (phone === defaultPhoneNumber) {
+      // For default phone number, use default OTP
+      smsOTP = defaultOtp;
+    } else {
+      // For other phone numbers, generate OTP as usual
+      const updatedValue = phone.replace(/^\+91|\s/g, '');
+      smsOTP = await loadOtp(updatedValue);
+    }
+
+    console.log('OTP sent:', smsOTP);
     res.json({ success: true }).status(200);
   } catch (error) {
     console.error(error);
@@ -39,41 +49,73 @@ export const phoneOtp = (loadOtp, sendSms) => async (req, res) => {
   }
 };
 
-export const verifyOtp =
-  (
-    // VerifyPhoneOtp,
-    checkOtp,
-    userModel,
-    findUserWithPhone,
-    createJwtToken,
-    // createUserToken
-  ) =>
-    async (req, res) => {
-      const { otp, phone } = req.body;
+export const verifyOtp = (
+  checkOtp,
+  userModel,
+  findUserWithPhone,
+  createJwtToken,
+) => async (req, res) => {
+  const { otp, phone } = req.body;
+  try {
+    const defaultPhoneNumber = "1234567890";
+    const defaultOtp = "111111";
+
+    if (phone == defaultPhoneNumber) {
+      let user;
+      let verified = false;
+      if (otp === defaultOtp) {
+        verified = true;
+      }
+      if (verified) {
+        if (!user) {
+          res.json({
+            success: true,
+            newUser: true,
+            redirect: "/createAccount",
+          });
+        } else {
+          const token = await createJwtToken(user);
+          res.json({ success: true, token, redirect: "/Discover" });
+        }
+      } else {
+        throw new Error("Failed to  verify Default account OTP");
+      }
+    } else {
       try {
+
+        let user1;
         if (smsOTP == otp) {
-          // const user = await findUserWithPhone( {phone})
-          const updatedValue=phone.replace(/^\+91|\s/g,'')
-          const user = await Users.findOne({phone:updatedValue})
-          console.log('user : ', user);
-          if (!user) {
+
+          const updatedValue = phone.replace(/^\+91|\s/g, '');
+          user1 = await Users.findOne({ phone: updatedValue });
+
+          if (!user1) {
             res.json({
               success: true,
               newUser: true,
               redirect: "/createAccount",
             });
           } else {
-            const token = await createUserToken(user);
+            const token = await createUserToken(user1);
             res.json({ success: true, token, redirect: "/Discover" });
           }
         } else {
-          throw new Error("Failed to verify OTP");
+          throw new Error("Failed to verify api phone OTP");
         }
+
+
       } catch (error) {
         console.error(error);
         res.status(401).json({ success: false, message: "Some error occurred" });
       }
-    };
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(401).json({ success: false, message: "Some error occurred" });
+  }
+};
+
+
 
 export const googleData =
   (userModel, findUserWithEmail, getGoogleOauthToken, getGoogleUser) =>
